@@ -1,0 +1,1267 @@
+var fps = 30;
+var time = 0;
+var key = {};
+var enemys=[];
+var bombs=[];
+var bullets=[];
+var myCanvas = document.getElementById("main");
+var g = myCanvas.getContext("2d");
+var fpsTime, nowFps;
+var enemyTime = 10;
+var gameStart = false;
+var position={};
+var can=0;
+var circle_style=0;
+var angle=0;
+var imgArray=new Array();
+var imgNumber=0;
+var logNumber=0;
+var start;
+var highscore;
+var about;
+var allow_log=0;
+var allow_score=0;
+var allow_about=0;
+var logtimer;
+var circle_alpha=0.8;
+var circle_y;
+var circle_timer;
+var score_alpha=1;
+var playerNumber=1;
+var danNumber;
+
+function Global(){
+}
+function Gimg(){
+
+}
+Global.round = 0;
+var boss2,boss,player;
+Global.imgArray=[{name:"back",src:"img/start_back.jpg"},{name:"circle",src:"img/start_circle.png"},{name:"ground",src:"img/ground.jpg"},{name:"fire",src:"img/fire.png"},{name:"player1",src:"img/player1.png"},{name:"player2",src:"img/player2.png"},{name:"player3",src:"img/player3.png"},{name:"enemy1",src:"img/enemy1.png"},{name:"enemy2",src:"img/enemy2.png"},{name:"boss2",src:"img/enemy3.png"},{name:"boss",src:"img/boss21.png"},{name:"boss22",src:"img/boss22.png"},{name:"bullet",src:"img/bullet.png"},{name:"log_back1",src:"img/log_back1.png"},{name:"log_back2",src:"img/log_back2.png"},{name:"log_button",src:"img/log_button.png"},{name:"high_back",src:"img/high_back.jpg"},{name:"high_back1",src:"img/high_back1.png"},{name:"high_back2",src:"img/high_back2.png"},{name:"about_author",src:"img/about_author.png"},{name:"about_intro",src:"img/about_intro.png"},{name:"change_circle",src:"img/change_circle.png"},{name:"about_back",src:"img/about_back.jpg"},{name:"about_top",src:"img/about_top.png"},{name:"dan1",src:"img/dan1.png"},{name:"dan2",src:"img/dan2.png"},{name:"dan3",src:"img/dan3.png"},{name:"enemyBullet1",src:"img/enemyBullet1.png"},{name:"enemyBullet2",src:"img/enemyBullet2.png"},{name:"enemyBullet3",src:"img/enemyBullet3.png"}];
+
+//Global.canvas = document.getElementById("main");
+//Global.context = Global.canvas.getContext("2d");
+Global.bulletArray = new Array(); //子弹数组
+Global.planeArray = new Array();  //敌机数组
+Global.bulletNameArray = new Array("enemyBullet1","enemyBullet2");
+Global.bulletTypeArray = new Array("straight","slash","goal","smart","slashes");
+Global.width = 480;
+Global.height = 800;
+Global.boss = 0;
+Global.bulletSpeed = 10;
+Global.shootInterval = 20;
+Global.playerShootInterval = 5;
+Global.waveArray = new Array();
+Global.pathArray = new Array(
+    {type:"straight"},
+    {type:"goal"},
+    {type:"smart"},
+    {type:"slash",angle:"0.8"},
+    {type:"foldLine",angle:"0.3",padding:"40"}
+)
+Global.position = {x:200,y:300};
+Global.roundArray = new Array(
+    {name:"enemy1",path:{type:"straight"},count:3,bulletType:2,position:"random"},
+    {name:"enemy1",path:{type:"goal"},count:3,bulletType:0,position:"random"},
+    {name:"enemy1",path:{type:"slash",angle:0.8},count:3,bulletType:0,position:{x:Global.width,y:20}},
+    {name:"enemy2",path:{type:"slash",angle:0.3},count:3,bulletType:0,position:{x:0,y:100}},
+    {name:"enemy1",path:{type:"smart"},count:4,bulletType:0,position:"random"},
+    {name:"enemy1",path:{type:"foldLine",angle:0.2,padding:40},count:5,bulletType:2,position:{x:0,y:40}},
+    {name:"enemy2",path:{type:"foldLine",angle:0.8,padding:40},position:{x:0,y:40},count:5,bulletType:2,position:{x:Global.width,y:40}},
+    {name:"boss2"},
+    {name:"enemy2",path:{type:"smart"},position:"random",count:4,bulletType:0},
+    {name:"enemy2",path:{type:"foldLine",angle:0.2,padding:40},position:{x:0,y:40},count:5,bulletType:2},
+    {name:"boss"}
+
+)
+
+function init(speed){
+    //Global.imgArray = [{name:"background",src:"images/B14.jpg"},{name:"player",src:"images/player1.png"},{name:"enemy1",src:"images/enemy1.png"},{name:"enemy2",src:"images/enemy2.png"},{name:"boss",src:"images/boss3.png"},{name:"boss2",src:"images/boss.png"},{name:"dan1",src:"images/dan1.png"},{name:"enemyBullet1",src:"images/enemyBullet1.png"},{name:"enemyBullet2",src:"images/enemyBullet2.png"}];
+
+    Global.interval = 10;
+    Global.now = 0;
+    //Global.canvas.relativeDistance =Global.getAbsoluteLocation(Global.canvas);
+    //imgLoad(function(){
+        //Global.context.drawImage(Gimg.background,0,0,Gimg.background.width,Gimg.background.height,0,0,Global.width,Global.height);
+        //Global.context.drawImage(Global.imgCanvas,0,0);
+        Global.playerInit();
+        Global.bossInit();
+	//alert("init");
+        Global.main(speed);
+    //});
+}
+
+
+Global.produceEnemy = function(){
+    Global.now += 1;
+    if(Global.now >= Global.interval){
+        //alert(Global.round+":"+Global.roundArray[Global.round].count);
+        Global.now = 0;
+        if(Global.round >= Global.roundArray.length)
+            return;
+        if(Global.boss == 0 && Global.roundArray[Global.round].name == "boss2"){
+            Global.boss = 1;
+        }
+        if(Global.boss == 1){
+            var rightPlane = new Plane("enemy1",Global.width,200,Global.bulletSpeed,0,"straight",{type:"slash",angle:0.8});
+            var leftPlane = new Plane("enemy1",0,200,Global.bulletSpeed,0,"straight",{type:"slash",angle:0.2});
+            Global.planeArray.push(rightPlane);
+            Global.planeArray.push(leftPlane);
+            return;
+        }
+        if(Global.boss != 2 && Global.roundArray[Global.round].name == "boss"){
+            Global.boss = 2;
+            return;
+        }
+        if(Global.boss == 2){
+            return;
+        }
+        var index = 3;// Math.floor(num*Global.bulletTypeArray.length);
+        //var newPlane = new Plane("enemy1",num*Global.width,0,5,0,"enemyBullet1",Global.bulletTypeArray[index],50,{num:3,gapAngle:1/6},Global.pathArray[0]);
+        var planes = Global.roundArray[Global.round];
+        if(planes.path != "none"){
+            if(planes.count > 0){
+                planes.count -= 1;
+                var x,y;
+                if(planes.position == "random"){
+                    var num = Math.random();
+                    x = num * Global.width;
+                    y = 0;
+                }
+                else{
+                    x = planes.position.x;
+                    y = planes.position.y
+                    //alert(x+"_shit");
+                }
+                var newPlane = new Plane(planes.name,x,y,10,0,Global.bulletTypeArray[planes.bulletType],planes.path);
+                Global.planeArray.push(newPlane);
+            }
+            else{
+                Global.round += 1;
+            }
+        }
+        else{                               //for rest
+            planes.count -= 1;
+            if(planes.count <= 0)
+            {
+                Global.round += 1;
+            }
+        }
+    }
+}
+
+Global.playerInit = function(){
+    player = new Plane("player1",200,580,0,0,"straight",{type:"straight"});
+    player.life = 5;
+    player.score = 0;
+    player.originalEnergy = player.energy = 10;
+    player.bulletType = "straight";
+}
+Global.reDraw = function(){
+    g.clearRect(0,0,480,800);
+    //Global.context.fillStyle = "black";
+    //Global.context.fillRect(0,0,480,800);
+    g.drawImage(Gimg.ground,0,0,Gimg.back.width,Gimg.back.height,0,0,Global.width,Global.height);
+    //player.x = Global.position.x-20;
+
+    //player.y = Global.position.y-20;
+    player.x=position.x-40;
+    player.y=position.y-40;
+    player.drawPlayer();
+    player.shootPlayer();
+    Global.produceEnemy();
+    if(Global.boss == 1){
+        boss2.calculatePosition();
+        if(player.isHit(boss2)){
+            player.harm(20);
+            boss2.harm(20);
+        }
+        if(boss2.energy > 0){
+            boss2.drawSelf();
+            boss2.shoot();
+        }
+        else{
+            Global.boss = 0;
+            Global.round += 1;
+        }
+    }
+    else if(Global.boss == 2){
+        boss.calculatePosition();
+        if(player.isHit(boss)){
+            player.harm(20);
+            boss.harm(20);
+        }
+        if(boss.energy <= 0){
+            Global.gameOver();
+        }
+        else{
+            boss.drawSelf();
+            boss.shoot();
+        }
+    }
+    //draw the enemy and produce the enemys' bullet
+    var plane;
+    for(var i=0,len=Global.planeArray.length;i<len;i++){
+        plane = Global.planeArray[i];
+        plane.calculatePosition();
+        if(player.isHit(plane)){
+            player.harm(20);
+            plane.harm(20);
+            Global.planeArray.splice(i,1);
+            len -= 1;
+        }
+        else if(plane.isOut()){
+            Global.planeArray.splice(i,1);
+            len -= 1;
+        }
+        else{
+            plane.drawSelf();
+            plane.shoot();
+        }
+    }
+    //check if the bullet hit something and draw it
+    for(var i=0,len=Global.bulletArray.length;i<len;i++){
+        Global.bulletArray[i].calculatePosition();
+        if(Global.bulletArray[i].isOut()){
+            Global.bulletArray.splice(i,1);
+            len -= 1;
+        }
+        else{
+            var isHit = false;
+            if(Global.bulletArray[i].parent.indexOf("player")==-1){
+                if(player.isHit(Global.bulletArray[i])){
+                    isHit = true;
+                   //alert("game over");
+                    //window.clearInterval(Global.hehe);
+                    player.harm(Global.bulletArray[i].power);
+                    //break;
+                }
+            }
+            else{
+                for(var j=0,jlen=Global.planeArray.length;j<jlen;j++){
+                    if(Global.planeArray[j].isHit(Global.bulletArray[i])){
+                        Global.planeArray[j].harm(Global.bulletArray[i].power);
+                        if(Global.planeArray[j].energy < 0){
+                            Global.planeArray.splice(j,1);
+                            len -= 1;
+                        }
+                        isHit = true;
+                        //alert("yes");
+                        break;
+                    }
+                }
+                if(Global.boss == 1){
+                    if(boss2.isHit(Global.bulletArray[i])){
+                        isHit = true;
+                        boss2.harm(Global.bulletArray[i].power);
+                        if(boss2.energy <= 0){
+                            boss2.die();
+                        }
+                    }
+                }
+                else if(Global.boss == 2){
+                    if(boss.isHit(Global.bulletArray[i])){
+                        isHit = true;
+                        boss.harm(Global.bulletArray[i].power);
+                        if(boss.energy <= 0){
+                            boss.die();
+                        }
+                    }
+                }
+            }
+            if(!isHit){
+                Global.bulletArray[i].drawSelf();
+            }
+            else{
+                Global.bulletArray.splice(i,1);
+                len -= 1;
+            }
+        }
+    }
+    var len = Global.waveArray.length;
+    for(var i=0;i<len;i++){
+	if(Global.waveArray[i].drawSelf()){
+	}
+	else{
+	    Global.waveArray.splice(i,1);
+	    len -= 1;
+	}
+    }
+
+}
+Global.bossInit = function(){
+    boss2 = new Boss("boss2",Global.width/2-50,0,5,100);
+    boss = new Boss("boss",Global.width/2-50,0,5,100);
+}
+Global.main = function(speed){
+    setInterval(function(){Global.reDraw();},speed);
+    //alert("cao");
+    //setTimeout(function(){alert("shit");},speed);
+}
+Global.getTreasure = function(){}
+Global.getEnergy = function(){};
+Global.gameOver = function(){};
+
+function Plane(name,x,y,speed,aspeed,bulletType,path){
+    var self = this;
+    self.name = name;
+    self.x = x;
+    self.y = y;
+    self.speed = speed;
+    self.xspeed = self.speed * Math.cos(self.angle*Math.PI);
+    self.yspeed = self.speed * Math.sin(self.angle*Math.PI);
+    //self.bulletName = bulletName;
+    if(self.name == "enemy1"){
+        self.bulletName = "enemyBullet1";
+    }
+    else if(self.name == "enemy2"){
+        self.bulletName = "enemyBullet2";
+    }
+    else if(self.name.indexOf("player")!=-1){
+        self.bulletName = "dan1";
+	//alert(self.x+"shit"+self.y);
+    }
+    self.bulletType = bulletType;
+    self.now = 0;
+    self.width = Gimg[self.name].width;
+    self.height = Gimg[self.name].height;
+    self.path = path || "";
+    //根据飞机类型给它生命值
+    if(self.name == "enemy1"){
+        self.energy = self.originalEnergy = 1;
+    }
+    else if(self.name == "enemy2"){
+        self.energy=self.originalEnergy = 3;
+    }
+    // 根据子弹类型给定一些参数
+    if(bulletType == "slashes"){
+        self.num = 12;
+        self.gapAngle = 1/6;
+    }
+    if(self.path.type == "straight"){
+        self.xspeed = 0;
+        self.yspeed = self.speed;
+    }
+    else if(self.path.type == "goal"){
+        self.calculateAngle();
+        self.xspeed = self.speed*Math.cos(self.angle*Math.PI);
+        self.yspeed = self.speed*Math.sin(self.angle*Math.PI);
+    }
+    else if(self.path.type == "smart"){
+        self.now = 0;
+    }
+    else if(self.path.type == "slash"){
+        self.angle = self.path.angle;
+        self.calculateSpeedByAngle();
+    }
+    else if(self.path.type == "foldLine"){
+        self.angle = self.path.angle;
+        self.isInborder = false;
+        self.calculateSpeedByAngle();
+    }
+}
+Plane.prototype.calculatePosition = function(){
+    var self = this;
+    if(self.path.type=="straight" || self.path.type=="slash"||self.path.type=="goal"){
+        self.x += self.xspeed;
+        self.y += self.yspeed;
+    }
+    else if(self.path.type=="foldLine"){
+        self.outBorderHandler();
+        self.calculateSpeedByAngle();
+        self.x += self.xspeed;
+        self.y += self.yspeed;
+        //alert(self.xspeed+","+self.yspeed);
+    }
+    else if(self.path.type == "smart"){
+        var max = 40;
+        self.yspeed = self.speed;
+        if(self.now < max){
+            self.calculateAngle();
+            //alert(self.angle);
+            if(self.y < player.y){
+                self.xspeed = self.yspeed/Math.tan(self.angle*Math.PI);
+                if(self.xspeed > 10)self.xspeed = 10;
+            }
+            //if the player is behind itself at first,set its type goal
+            else if(typeof(self.xspeed) == "undefined"){
+                //self.xspeed = 0;
+                self.path.type = "goal";
+                self.xspeed = self.speed*Math.cos(self.angle*Math.PI);
+                self.yspeed = self.speed*Math.sin(self.angle*Math.PI);
+            }
+            //alert(self.xspeed+","+self.yspeed);
+            self.now += 1;
+        }
+        self.x += self.xspeed;
+        self.y += self.yspeed;
+    }
+    //self.x += self.speed * Math.cos(self.angle*Math.PI);
+    //self.y += self.speed * Math.sin(self.angle*Math.PI);
+
+}
+Plane.prototype.outBorderHandler = function(){
+    var self = this;
+    if(self.x<=self.path.padding || self.x>=Global.width-self.path.padding-self.width){
+        if(self.isInborder == true){
+            self.angle = 1 - self.angle;
+        }
+    }
+    else{
+        self.isInborder = true;
+    }
+}
+Plane.prototype.calculateSpeedByAngle = function(){
+    var self = this; // Do not forget this code
+
+    self.xspeed = self.speed*Math.cos(self.angle*Math.PI);
+    self.yspeed = self.speed*Math.sin(self.angle*Math.PI);
+    //alert(self.xspeed+","+self.yspeed);
+}
+Plane.prototype.isOut = function(){
+    var self = this;
+    if(self.x<0-self.width || self.x>Global.width || self.y <0-self.height || self.y >Global.height) return true;
+    return false;
+}
+Plane.prototype.drawSelf = function(){
+    var self = this;
+    var img = Gimg[self.name];
+    g.drawImage(img,0,0,img.width,img.height,self.x,self.y,img.width,img.height);
+}
+Plane.prototype.drawPlayer = function(){
+    var self = this;
+    if(playerNumber==1)
+		{
+		//alert(self.x+","+self.y);
+		g.drawImage(Gimg.player1, self.x, self.y , 85, 100) ;
+		playerNumber=2;
+		}else if(playerNumber==2)
+		{
+		g.drawImage(Gimg.player2, self.x, self.y , 85, 100) ;
+		playerNumber=3;
+		}else if(playerNumber==3)
+		{
+		g.drawImage(Gimg.player3, self.x, self.y , 85, 100) ;
+		playerNumber=1;
+		}
+}
+Plane.prototype.shoot = function(){
+    var self = this;
+    var y = self.y+self.height;
+    self.now+=1;
+    if(self.name.indexOf("player")==-1 && self.now < Global.shootInterval){
+        return;
+    }
+    if(self.name.indexOf("player")!=-1 && self.now < Global.playerShootInterval){
+        return;
+    }
+    self.now = 0;
+    var speed = 11;
+    if(self.name.indexOf("player")!=-1){
+        speed = -11;
+        y = self.y;
+    }
+    if(self.bulletType != "slashes"){
+        var bullet = new Bullet(self.name,self.bulletName,self.bulletType,self.x+self.width/2,y,speed,0,0.5);
+        Global.bulletArray.push(bullet);
+    }
+    else{
+        //var angle = self.num;
+        var angle = 0.5-(self.num-1)/2*self.gapAngle;
+        var bullet;
+        for(var i=0;i<self.num;i++){
+            //alert(angle);
+            bullet = new Bullet(self.name,self.bulletName,"slash",self.x+self.width/2,self.y+self.height,speed,0,angle);
+            angle += self.gapAngle;
+            Global.bulletArray.push(bullet);
+        }
+    }
+}
+Plane.prototype.shootPlayer = function(){
+   var self = this;
+   self.now += 1;
+   if(self.now < Global.playerShootInterval){
+        return;
+   }
+   self.now = 0;
+   var speed = 0- Global.bulletSpeed-10;
+   //alert(self.bulletName+"~~");
+   var bullet1 = new Bullet(self.name,"dan1",self.bulletType,self.x+self.width/2-20,self.y,speed,0,0.5);
+   Global.bulletArray.push(bullet1);
+   var bullet2 = new Bullet(self.name,"dan1",self.bulletType,self.x+self.width/2,self.y-20,speed,0,0.5);
+   Global.bulletArray.push(bullet2);
+   var bullet3 = new Bullet(self.name,"dan1",self.bulletType,self.x+self.width/2+20,self.y,speed,0,0.5);
+   Global.bulletArray.push(bullet3);
+}
+
+Plane.prototype.isHit = function(thing){
+    var self = this;
+    if(thing.x+thing.width>=this.x&&thing.x<=this.x+this.width&&thing.y+thing.height>=this.y&&thing.y<=this.y+this.height){
+        return true;
+    }
+    return false;
+}
+Plane.prototype.harm = function(power){
+    var self = this;
+    self.energy -= power;
+    if(self.name == "boss"){
+        //alert(self.name+","+self.energy+","+power);
+    }
+    if(self.name .indexOf("player")!=-1){
+        if(self.energy <= 0){
+            self.life -= 1;
+            self.energy = 5;
+            if(self.life <= 0){
+
+            }
+        }
+    }
+    else{
+	if(self.energy <= 0){
+	    self.die();
+	}
+    }
+
+}
+Plane.prototype.die = function(){
+    //alert("yes");
+    var self = this;
+    var wave = new Wave(self.x+self.width/2,self.y+self.height/2,g);
+    Global.waveArray.push(wave);
+    if(self.name.indexOf("player")==-1){
+
+        player.score += Plane.originalEnergy;//need to change
+     }
+    else{
+        self.life -= 1;
+        if(self.life <= 0){
+            Global.gameOver();
+        }
+        self.energy = self.originalEnergy;
+    }
+}
+
+function Boss(name,x,y,speed,energy){
+    var self = this;
+    Plane.call(self,name,x,y,speed,0,"straight",{});
+    self.originalEnergy= self.energy = energy;
+    self.now = 0;
+    self.bulletSpeed = 10;
+    self.padding = 50;
+    self.rightY = 100;
+    self.isFirst = true;
+    self.width = Gimg[self.name].width;
+    self.height = Gimg[self.name].height;
+    if(self.name == "boss"){
+        self.num = 16;
+        self.gapAngle = 1/8;
+    }
+}
+Boss.prototype.calculatePosition = function(){
+    var self = this;
+    if(self.y<self.rightY){
+        self.yspeed = self.speed;
+        self.xspeed = 0;
+    }
+    else{
+        self.outBorderHandler();
+    }
+    self.x += self.xspeed;
+    self.y += self.yspeed;
+    //alert(self.xspeed+","+self.yspeed);
+}
+Boss.prototype.outBorderHandler = function(){
+    var self = this;
+    if(self.x<=self.padding){
+        //self.angle = 1-self.angle;
+        self.xspeed = self.speed;
+        self.yspeed = 0;
+    }
+    else if(self.x>=Global.width-self.padding-self.width){
+        self.xspeed = 0-self.speed;
+        self.yspeed = 0;
+    }
+    else{
+        if(self.isFirst){
+            self.xspeed = self.speed;
+            self.yspeed = 0;
+            self.isFirst = false;
+        }
+    }
+}
+Boss.prototype.shoot = function(){
+    var self = this;
+    self.now += 1;
+    if(self.now < Global.shootInterval){
+        return;
+    }
+    self.now = 0;
+    if(self.name == "boss2"){
+        var bullet = new Bullet("boss2","enemyBullet2","straight",self.x+self.width/2-10,self.y+self.height,Global.bulletSpeed,0,0.5);
+    Global.bulletArray.push(bullet);
+        bullet = new Bullet("boss2","enemyBullet2","straight",self.x+self.width/2+10,self.y+self.height,Global.bulletSpeed,0,0.5);
+        Global.bulletArray.push(bullet);
+        bullet = new Bullet("boss2","enemyBullet1","smart",self.x+self.width/2-30,self.y+self.height,Global.bulletSpeed,0,0.5);
+        Global.bulletArray.push(bullet);
+        bullet = new Bullet("boss2","enemyBullet1","smart",self.x+self.width/2+30,self.y+self.height,Global.bulletSpeed,0,0.5);
+        Global.bulletArray.push(bullet);
+    }
+    else{
+        var angle = 0.5 -(self.num-1)/2*self.gapAngle;
+        var bullet;
+        for(var i=0;i<self.num;i++){
+            bullet = new Bullet("boss","enemyBullet1","slash",self.x+self.width/2,self.y+self.height,Global.bulletSpeed,0,angle);
+            angle += self.gapAngle;
+            Global.bulletArray.push(bullet);
+        }
+        bullet = new Bullet("boss","enemyBullet2","smart",self.x+self.width/2-10,self.y+self.height,Global.bulletSpeed,0,0.5);
+        Global.bulletArray.push(bullet);
+        bullet = new Bullet("boss","enemyBullet2","smart",self.x+self.width/2+10,self.y+self.height,Global.bulletSpeed,0,0.5);
+        Global.bulletArray.push(bullet);
+
+    }
+}
+Boss.prototype.die = function(){
+    var self = this;
+    if(self.name == "boss2"){
+        Global.round += 1;
+        alert("die:"+Global.round);
+        Global.boss = 0;
+    }
+    else if (self.name == "boss"){
+        Global.boss = 0;
+        Global.gameOver();
+    }
+    player.score += self.originalEnergy;
+}
+Boss.prototype.drawSelf = Plane.prototype.drawSelf;
+Boss.prototype.isHit = Plane.prototype.isHit;
+Boss.prototype.harm = Plane.prototype.harm;
+
+//x,y为坐标值，context为绘图的上下文
+function Wave(x,y,context){
+    var self =  this;
+    self.x = x;
+    self.y = y;
+    self.now = 1;
+    self.end = 20;
+    self.transparence = 1;
+    self.enlarge = true;
+    self.context = context;
+    //alert("wave");
+}
+Wave.prototype.drawSelf = function(){
+    var self = this;
+    if(self.enlarge){
+        self.now += 4;
+    }
+    if(self.now >= 20){
+        self.enlarge = false;
+    }
+    var context = self.context;
+    context.save();
+    //context.fillStyle = "black";
+    //context.clearRect(0,0,width,height);
+    //context.fillRect(0,0,width,height);
+    context.beginPath();
+    context.translate(self.x,self.y);
+    context.lineWidth = 1;
+    if(self.enlarge){
+    	context.strokeStyle = "rgb(0,90,255)";
+    }
+    else{
+	self.transparence -= 0.5;
+	if(self.transparence <= 0){
+            context.closePath();
+	    context.restore();
+	    return false;
+	}
+	context.strokeStyle = "rgba(0,90,255,"+self.transparence+")";
+    }
+    context.rotate(Math.random()*Math.PI);
+    context.scale(3,1);
+    //alert(theNum);
+    //alert(theNum);
+    context.arc(0,0,self.now,0*Math.PI,2*Math.PI);
+    //context.arc(width/2,height/2,100.0*Math.PI,2*Math.PI);
+    context.stroke();
+    context.closePath();
+    context.restore();
+    return true;
+}
+function Bullet(parent,name,type,x,y,speed,aspeed,angle){
+    var self = this;
+    self.parent = parent; //the plane which produce it
+    self.name = name;    // img name
+    self.type = type;     // bullet type
+    self.x = x;
+    self.y = y;
+    //alert(self.parent+","+self.name);
+    if(self.name == "enemyBullet1"){
+        self.power = 1;
+    }
+    else if(self.name == "enemyBullet2"){
+        self.power = 3;
+    }
+    else if(self.name == "enemyBullet3"){
+        self.power = 5;
+    }
+    else if(self.name == "dan1"){
+        self.power = 1;
+    }
+    if(self.parent.indexOf("player")!=-1){
+    }
+    //alert(self.y);
+    self.speed = speed;    // the total speed
+    self.aspeed = aspeed; //the accelerate speed
+    self.angle = angle;
+    try{
+    	self.width = Gimg[self.name].width;
+    	self.height = Gimg[self.name].height;
+    }
+    catch(e){alert(self.name);}
+    if(self.type == "straight"){
+        self.xspeed = 0;
+        self.yspeed = speed;
+    }
+    else if(self.type == "slash"){
+        self.xspeed = Math.round(self.speed*Math.cos(self.angle*Math.PI));
+        self.yspeed = Math.round(self.speed*Math.sin(self.angle*Math.PI));
+        //alert(self.angle+","+self.xspeed+","+self.yspeed);
+    }
+    else if(self.type == "goal"){
+        self.calculateAngle();
+        self.xspeed = self.speed*Math.cos(self.angle*Math.PI);
+        self.yspeed = self.speed*Math.sin(self.angle*Math.PI);
+    }
+    else if(self.type == "smart"){
+        self.now = 0;
+    }
+    //self.width = width||6;
+    //self.height = height||6;
+}
+
+Bullet.prototype.calculatePosition = function(){
+    var self = this;
+    if(self.parent.indexOf("player")!=-1){
+        //alert(self.speed+","+self.xspeed+","+self.yspeed);
+        //alert(self.type);
+    }
+    if(self.type == "straight"){
+        self.y += self.speed;
+        //alert("shit");
+    }
+    else if(self.type == "slash" || self.type == "goal"){
+        self.x += self.xspeed;
+        self.y += self.yspeed;
+    }
+    else if(self.type == "smart"){
+        var max = 40;
+        self.yspeed = self.speed;
+        if(self.now < max){
+            self.calculateAngle();
+            //alert(self.angle);
+            if(self.y < player.y){
+                self.xspeed = self.yspeed/Math.tan(self.angle*Math.PI);
+                if(self.xspeed > 10)self.xspeed = 10;
+            }
+            //if the player is behind itself at first,set its type goal
+            else if(typeof(self.xspeed) == "undefined"){
+                //self.xspeed = 0;
+                self.type = "goal";
+                self.xspeed = self.speed*Math.cos(self.angle*Math.PI);
+                self.yspeed = self.speed*Math.sin(self.angle*Math.PI);
+            }
+            self.now += 1;
+        }
+        self.x += self.xspeed;
+        self.y += self.yspeed;
+    }
+}
+Bullet.prototype.calculateAngle = function(){
+    var self = this;
+    self.angle = Math.atan((player.y-self.y)/(player.x-self.x))/Math.PI;
+    if(player.x < self.x){
+        self.angle += 1;
+    }
+    //alert((self.y) + " yes");
+}
+Plane.prototype.calculateAngle = Bullet.prototype.calculateAngle;
+Bullet.prototype.isOut = function(){
+    var self = this;
+    if(self.x<0 || self.x>Global.width || self.y <0 || self.y >Global.height) return true;
+    return false;
+}
+Bullet.prototype.drawSelf = function(){
+    var self = this;
+    var img = Gimg[self.name];
+    if(self.parent.indexOf("player")!=-1){
+        //alert(self.x+","+self.y);
+    }
+    //Global.context.save();
+    //Global.context.translate(self.x,self.y);
+    //Global.context.rotate((self.angle-0.5)*Math.PI);
+    g.drawImage(img,0,0,img.width,img.height,self.x-self.width/2,self.y,img.width,img.height);
+    //Global.context.restore();
+}
+
+
+function main()
+{
+
+    imgLoad(function(){
+	StartLogTimer();
+	//StartGame();
+    });
+    //setInterval("drawAll()", 40);
+    //setInterval("updateAll()", 30)
+    //setInterval("startLoop()", 1000 / fps)
+}
+function StartLogTimer()
+{
+
+	logtimer = setInterval("drawLog()",1000);
+	setTimeout("allowSelect()",3000);
+}
+
+function StartGame()
+{
+//alert("start");
+    init(50);
+}
+
+
+//允许选择
+function allowSelect()
+{
+    allow_log=1;
+}
+
+/*
+Global.getAbsoluteLocation = function(element){
+    if(arguments.length != 1|| element == null){
+        return null;
+    }
+    var offsetTop = element.offsetTop;
+    var offsetLeft = element.offsetLeft;
+    while(element = element.offsetParent){
+        offsetTop += element.offsetTop;
+        offsetLeft += element.offsetLeft;
+    }
+    return {x:offsetTop,y:offsetLeft};
+}*/
+
+/*
+//Global.canvas.onmousemove = function(event){
+    //Global.position = Global.getMousePosition(event);
+    //Global.position.x -= Global.canvas.relativeDistance.x;
+    //Global.position.y -= Global.canvas.relativeDistance.y;
+//}
+
+Global.loadImg = function(callback){
+    Global.imgCanvas = document.createElement("canvas");
+    Global.imgContext = Global.imgCanvas.getContext("2d");
+    Global.imgCanvas.width = 480;
+    Global.imgCanvas.height = 800;
+    var len = Global.imgArray.length;
+    Gimg.loadedNum = 0;
+    Gimg.imgNum = len;
+    Gimg.allLoaded = false;
+    for(var i=0;i<len;i++){
+        Gimg[Global.imgArray[i].name] = new Image();
+        Gimg[Global.imgArray[i].name].src = Global.imgArray[i].src;
+        Gimg[Global.imgArray[i].name].onload = function(){
+            Global.imgContext.drawImage(this,0,0,this.width,this.height,0,0,Global.width,Global.height);
+            this.loaded = true;
+            Gimg.loadedNum += 1;
+            if(Gimg.loadedNum >= Gimg.imgNum){
+                Gimg.allLoaded = true;
+                callback();
+            }
+        }
+    }
+}
+*/
+//以下代码待定。。。
+var SupportsTouches = ("createTouch" in document);//判断是否支持触摸
+//alert(SupportsTouches);
+StartEvent = SupportsTouches ? "touchstart" : "mousedown";//支持触摸式使用相应的事件替代
+MoveEvent = SupportsTouches ? "touchmove" : "mousemove";
+EndEvent = SupportsTouches ? "touchend" : "mouseup";
+$=function(id){
+	return document.getElementById(id);
+}
+preventDefault=function(ev){
+	if(ev)ev.preventDefault();
+	else window.event.returnValue = false;
+}
+Global.getMousePosition=function (ev){
+	var x = y = 0,
+	doc = document.documentElement,
+	body = document.body;
+	if(!ev) ev=window.event;
+	if (window.pageYoffset) {
+		x = window.pageXOffset;
+		y = window.pageYOffset;
+	}else{
+		x = (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc && doc.clientLeft || body && body.clientLeft || 0);
+		y = (doc && doc.scrollTop  || body && body.scrollTop  || 0) - (doc && doc.clientTop  || body && body.clientTop  || 0);
+	}
+	if(SupportsTouches){
+		var evt = ev.touches.item(0);//仅支持单点触摸,第一个触摸点
+		x=evt.pageX;
+		y=evt.pageY;
+	}else{
+		x += ev.clientX;
+		y += ev.clientY;
+	}
+    //alert(x+","+y);
+	return {'x' : x, 'y' : y};
+};
+
+
+
+//鼠标移动
+//function getMousePosition(Event){
+//    if(Event.pageX||Event.pageY){
+//        return {x:Event.pageX,y:Event.pageY};
+//    }
+ //   return {
+ //       x:Event.clientX + document.body.scrollLeft -document.body.clientLeft,
+ //       y:Event.clientY + document.body.scrollTop - document.body.clientTop
+//	}
+//}
+//触发鼠标移动
+myCanvas.onmousemove = function(Event){
+	position= Global.getMousePosition(Event);
+}
+//鼠标按下
+myCanvas.onmousedown=mouseMove;
+myCanvas.addEventListener(StartEvent,function(eve){
+    Global.getMousePosition(eve);
+    mouseMove(eve);
+})
+myCanvas.addEventListener(EndEvent,function(eve){
+    Global.getMousePosition(eve);
+});
+myCanvas.addEventListener(MoveEvent,function(eve){
+    Global.getMousePosition(eve);
+})
+
+	//can=1;
+	//myCanvas.onmousemove(event);
+//alert(allow_score);
+
+//}
+//鼠标抬起
+myCanvas.onmouseup=function(event)
+{
+	//can=0;
+}
+function mouseMove(ev)
+{
+	ev = ev || window.event;
+
+	position = Global.getMousePosition(ev);
+	if(allow_log && !allow_score && !allow_about)
+	{
+		if(position.x>140 && position.x<340 && position.y>400 &&position.y<460)
+		{
+			window.clearInterval(logtimer);
+			circle_y=440;
+			drawCircle();
+			setTimeout("StartGame()",600);
+		}
+		else if(position.x>140 && position.x<340 && position.y>460 && position.y<510)
+		{
+			window.clearInterval(logtimer);
+			circle_y=495;
+			drawCircle();
+			setTimeout("drawHighScore()",600);
+		}
+		else if(position.x>140 && position.x<340 && position.y>510 && position.y<570)
+		{
+			window.clearInterval(logtimer);
+			circle_y=550;
+			drawCircle();
+			setTimeout("drawAbout()",600);
+		}
+	}
+	else if(allow_score && !allow_log && !allow_about)
+	{
+		if(position.x>320 && position.x<434 && position.y>680 && position.y<725)
+		{
+			drawHighScoreBack();
+		}
+	}
+	else if(!allow_score && !allow_log && allow_about)
+	{
+		if(position.x>320 && position.x<434 && position.y>680 && position.y<725)
+		{
+			drawAboutBack();
+		}
+	}
+	//document.getElementById('div1').value = mousePos.x;
+	//document.getElementById('div2').value = mousePos.y;
+}
+
+//画动态的圆
+function drawCircle()
+{
+	circle_timer=setInterval("drawChangeCircle()",100);
+}
+function drawChangeCircle()
+{
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+	g.save()
+	g.globalAlpha=circle_alpha+0.2;
+	g.drawImage(Gimg.log_back1,140,400,200,170);
+	g.drawImage(Gimg.log_button,0,0,200,60,140,400,200,60);
+	g.drawImage(Gimg.log_button,0,60,200,50,140,460,200,50);
+	g.drawImage(Gimg.log_button,0,110,200,60,140,510,200,60);
+
+	g.drawImage(Gimg.change_circle,240-360*(0.8-circle_alpha),circle_y-165*(0.8-circle_alpha),720*(0.8-circle_alpha),330*(0.8-circle_alpha));
+	g.drawImage(Gimg.change_circle,240-360*(1-circle_alpha),circle_y-165*(1-circle_alpha),720*(1-circle_alpha),330*(1-circle_alpha));
+	g.globalAlpha=1;
+	g.restore();
+	if((circle_alpha-0.2)<0.01)
+	{
+	    circle_alpha=0.8;
+	    window.clearInterval(circle_timer);
+	}
+	else
+	{
+	    circle_alpha-=0.2;
+	}
+}
+
+//画得分榜
+function drawHighScore()
+{
+	allow_score=1;
+	allow_log=0;
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.high_back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.high_back1,320,680,114,45);
+
+	//g.drawImage(Gimg.log_back1,0,0,200,110,140,400,200,110);
+	//g.drawImage(Gimg.log_button,0,0,200,110,140,400,200,110);
+}
+function drawHighScoreBack()
+{
+	allow_score=0;
+	allow_log=1;
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.high_back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.high_back2,320,680,114,45);
+	StartLogTimer();
+	//g.drawImage(Gimg.log_back1,0,0,200,110,140,400,200,110);
+	//g.drawImage(Gimg.log_button,0,0,200,110,140,400,200,110);
+}
+
+
+function drawAbout()
+{
+	allow_about=1;
+	allow_log=0;
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.about_back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.about_top,0,0,Global.width,229);
+	g.drawImage(Gimg.about_intro,40,160,402,353);
+	g.drawImage(Gimg.about_author,40,520,402,153);
+	g.drawImage(Gimg.high_back1,320,680,114,45);
+
+}
+function drawAboutBack()
+{
+	allow_about=0;
+	allow_log=1;
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.about_back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.about_top,0,0,Global.width,229);
+	g.drawImage(Gimg.about_intro,40,160,402,353);
+	g.drawImage(Gimg.about_author,40,520,402,153);
+	g.drawImage(Gimg.high_back2,320,680,114,45);
+	StartLogTimer();
+}
+//function startLoop()
+//{
+//	gameStart.update();
+//	updateObjs();
+//	drawObjs();
+//}
+
+//得分
+function drawScore()
+{
+    g.save();
+    g.fillStyle = "#fff";
+    g.fillText("SCORE: " + player.score, 200, 10);
+    g.restore();
+}
+
+var log_animation;
+var log_alpha=0;
+//画登录页面
+function drawLog()
+{
+    switch(logNumber)
+    {
+
+    case 0:
+	log_alpha=0;
+	log_animation=setInterval("drawlog1()",100);
+	logNumber++;
+	break;
+    case 1:
+
+	window.clearInterval(log_animation);
+	log_alpha=0;
+	log_animation=setInterval("drawlog2()",100);
+	logNumber++;
+	break;
+    case 2:
+
+	window.clearInterval(log_animation);
+	log_alpha=0;
+	log_animation=setInterval("drawlog3()",100);
+	logNumber++;
+	break;
+    case 3:
+	window.clearInterval(log_animation);
+	log_alpha=0;
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.log_back1,140,400,200,170);
+	g.drawImage(Gimg.log_button,0,0,200,60,140,400,200,60);
+	g.drawImage(Gimg.log_button,0,60,200,50,140,460,200,50);
+	g.drawImage(Gimg.log_button,0,110,200,60,140,510,200,60);
+	logNumber++;
+	break;
+    case 4:
+	g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.log_back2,140,400,200,170);
+	g.drawImage(Gimg.log_button,0,0,200,60,140,400,200,60);
+	g.drawImage(Gimg.log_button,0,60,200,50,140,460,200,50);
+	g.drawImage(Gimg.log_button,0,110,200,60,140,510,200,60);
+	logNumber--;
+
+    }
+}
+//画透明的进度
+function drawlog1()
+{
+	if(log_alpha>=1)
+	{
+	    log_alpha=0;
+	}
+	log_alpha+=0.1;
+        g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+	g.save();
+	g.globalAlpha = log_alpha;
+	g.drawImage(Gimg.log_back1,0,0,200,60,140,400,200,60);
+	g.drawImage(Gimg.log_button,0,0,200,60,140,400,200,60);
+	g.restore();
+}
+function drawlog2()
+{
+	if(log_alpha>=1)
+	{
+	    log_alpha=0;
+	}
+	log_alpha+=0.1;
+        g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.log_back1,0,0,200,60,140,400,200,60);
+	g.drawImage(Gimg.log_button,0,0,200,60,140,400,200,60);
+	g.save();
+	g.globalAlpha = log_alpha;
+	g.drawImage(Gimg.log_back1,0,60,200,50,140,460,200,50);
+	g.drawImage(Gimg.log_button,0,60,200,50,140,460,200,50);
+	g.restore();
+}
+function drawlog3()
+{
+	if(log_alpha>=1)
+	{
+	    log_alpha=0;
+	}
+	log_alpha+=0.1;
+        g.clearRect(0,0,Global.width,Global.height);
+	g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+	g.drawImage(Gimg.log_back1,0,0,200,110,140,400,200,110);
+	g.drawImage(Gimg.log_button,0,0,200,110,140,400,200,110);
+	g.save();
+	g.globalAlpha = log_alpha;
+	g.drawImage(Gimg.log_back1,0,110,200,60,140,510,200,60);
+	g.drawImage(Gimg.log_button,0,110,200,60,140,510,200,60);
+	g.restore();
+
+}
+//画加载页面
+function drawStart()
+{
+    g.clearRect(0,0,Global.width,Global.height);
+    g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+
+    g.save();
+    g.fillStyle = "#fff";
+    g.fillText((imgNumber-2)*10+"%", 230, 484);
+    g.restore();
+
+
+    if(angle==360)
+    {
+	angle=0;
+    }
+    angle+=10;
+
+    g.translate(240,Global.width);
+    g.rotate(angle*Math.PI/180);
+    g.drawImage(Gimg.circle,-60,-60,120,120);
+    g.rotate(-angle*Math.PI/180);
+    g.translate(-240,-Global.width);
+}
+
+//图片预加载
+var imgLoad=function(callback){
+    var timer;
+    var length=Global.imgArray.length;
+    for(var i=0;i<length;i++)
+    {
+	Gimg[Global.imgArray[i].name]=new Image();
+	Gimg[Global.imgArray[i].name].src=Global.imgArray[i].src;
+	Gimg[Global.imgArray[i].name].onload=function()
+	{
+	    this.onload=true;
+	    imgNumber++;
+	    if(imgNumber==2)
+	    {
+	        g.drawImage(Gimg.back,0,0,Global.width,Global.height);
+    		g.drawImage(Gimg.circle,180,420,120,120);
+		timer=window.setInterval("drawStart()",50);
+
+	    }
+	    else if(imgNumber>2 && imgNumber<length)
+	    {
+		window.clearInterval(timer);
+		timer=window.setInterval("drawStart()",50);
+     	    }
+	    if(imgNumber>=length)
+	    {
+		window.clearInterval(timer);
+		callback();
+	    }
+	}
+
+    }
+}
+
+//初始化
+document.ontouchstart = function(e)
+{
+	e.preventDefault();
+};

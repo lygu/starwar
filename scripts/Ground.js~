@@ -1,0 +1,26 @@
+var hasGround = true;
+
+var ground = 
+{
+	draw:function()
+	{
+		var myCanvas = document.getElementById("main");
+		var g = myCanvas.getContext("2d");
+		g.globalalpha=1;
+		//var img = document.getElementById("groundImg");
+		g.drawImage(Gimg.ground,0,0,480,800);
+		//if(hasGround)
+		//{
+			
+			//g.drawImage(img,0,0,300,500);
+			//g.drawImage(img, 0, y2, 500, y1, 0, 0, 500, y1);
+			//g.drawImage(img, 0, 0, 500, y2, 0, this.y, 500, y2);
+		//}
+		//else
+		//{
+		//	g.fillRect(0, 0, 500, 500);
+		//}
+	}
+}
+
+

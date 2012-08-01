@@ -1,0 +1,17 @@
+body,div,span,image{
+    padding:0px;
+    margin:0px;
+}
+#main{
+    position:absolute;
+    left:0px;
+    top:0px;
+    display:none;
+}
+#interface{
+    position:absolute;
+    left:0px;
+    top:0px;
+    background:url(../img/about_back.jpg);
+    display:block;
+}

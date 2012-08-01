@@ -1,0 +1,48 @@
+/*var Global = {};
+var Gmedia = new Array();
+Global.mediaArray = [{name:"bossBomb",src:"media/bossBomb.wav"},{name:"shoot",src:"media/shoot.wav"}];
+var srcNumber =0;
+var srcLoad=function(callback){
+    var len = Global.mediaArray.length;
+    for(var j=0;j<len;j++){
+        Gmedia[Global.mediaArray[j].name] = document.createElement('audio');
+		Gmedia[Global.mediaArray[j].name].src = Global.mediaArray[j].src;
+		Gmedia[Global.mediaArray[j].name].load();
+        Gmedia[Global.mediaArray[j].name].addEventListener("canplaythrough", function(){
+			Gmedia[Global.mediaArray[j].name].play();
+			alert("cao");
+            this.onload = true;
+            srcNumber ++;
+            alert("wayes");
+	    	if(srcNumber>=len)
+	    	{
+				callback();
+	    	}
+        });
+		
+    }
+}
+srcLoad(function(){alert("yes");});
+var files = ['media/shoot.wav','media/bossBomb.wav'];
+
+$.each(files,function(){
+   var tmp = new Audio();
+   tmp.src = this;
+   tmp.on('loadeddata',function(){
+   var i = files.indexOf(this);
+      files.splice(i,1);
+      if (!files.length){
+         alert('Preloading done!');
+      }
+   });
+});
+*/
+
+var i= 1;
+var audio = document.createElement("audio");
+        audio.src = "media/shoot.wav";
+        audio.addEventListener("canplaythrough", function () {
+            alert('音频文件已经准备好，随时待命');
+			i += 1;
+			alert(i);
+        }, false);

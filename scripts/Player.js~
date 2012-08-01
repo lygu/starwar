@@ -1,0 +1,107 @@
+var player = 
+{
+	x:250,
+	y:400,
+	time:110,
+	score:0,
+	width:40,
+	loc:new Vector(250, 400),
+	draw:function()
+	{
+		//var img = document.getElementById("playerImg");
+		if(playerNumber==1)
+		{
+		g.drawImage(Gimg.player1, this.x, this.y , 85, 100) ;
+		playerNumber=2;
+		}else if(playerNumber==2)
+		{
+		g.drawImage(Gimg.player2, this.x, this.y , 85, 100) ;
+		playerNumber=3;
+		}else if(playerNumber==3)
+		{
+		g.drawImage(Gimg.player3, this.x, this.y , 85, 100) ;
+		playerNumber=1;
+		}
+	},
+	
+	addFire:function()
+	{
+		//var fire = new Fire(this.x + 22, this.y + 50);
+		//bombs.push(fire);
+	},
+	
+	addBullet:function()
+	{
+		var bullet = new Bullet(this.x + 16, this.y - 20);
+		bullets.push(bullet);
+	},
+		
+	keymove:function()
+	{	
+		this.x=position.x-40;
+		this.y=position.y-30;
+		if(this.x > 2480) {this.x = 480;}
+		if(this.x<0){this.x=0}
+		if(this.y>800){this.y=800;}
+		if(this.y<0){this.y=0;}	
+	},
+	
+	update:function()
+	{
+		this.time ++;
+		this.keymove();
+		if(this.time > 4) 
+		{
+			this.time = 0;
+			this.addBullet();
+		}
+		this.addFire();
+		for(var i = 0; i < enemys.length;i ++)
+		{
+			var ex = enemys[i].loc.x + enemys[i].width/2; 
+			var ey = enemys[i].loc.y + enemys[i].width/2;
+			var tx = this.x + 32;
+			var ty = this.y + 32;
+			var xx = tx - ex;
+			var yy = ty - ey;
+			
+			if((xx*xx + yy*yy) < ((enemys[i].width/2.5 + 16)*(enemys[i].width/2.5 + 16)))
+			{
+				alert("You Lose!!!");
+				player.score = 0;
+				enemyTime = 10;
+				enemys = [];
+				key = [];
+				objs[0] = enemys;
+			}
+		}
+	}	
+}
+
+function Bullet(x, y)
+{
+	this.loc = new Vector(x, y);
+	this.speed = 30;
+	this.width = 32;
+	this.isDie = false;
+}
+
+Bullet.prototype.update = function()
+{
+	this.loc.y -= this.speed;
+	if(this.loc.y < -32) this.isDie = true;	
+};
+
+Bullet.prototype.draw = function()
+{
+	//var img = document.getElementById("bulletImg");
+	g.drawImage(Gimg.dan1, this.loc.x, this.loc.y, 15, 40) ;
+	g.drawImage(Gimg.dan1, this.loc.x+20, this.loc.y-15, 15, 40) ;
+	g.drawImage(Gimg.dan1, this.loc.x+40, this.loc.y, 15, 40) ;
+};
+
+
+
+
+
+
